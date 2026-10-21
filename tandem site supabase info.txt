@@ -1,0 +1,3 @@
+https://hbraxlqiuymtttldeogp.supabase.co      project url
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhicmF4bHFpdXltdHR0bGRlb2dwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MDM1MzUsImV4cCI6MjEwODE3OTUzNX0.tTs0V1M01IQ8flwa4CYoBIWnURzW0Cbd0sVd-RPdtLo           your anon key
