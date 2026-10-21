@@ -75,54 +75,35 @@
     <p class="foot">Are you new here? <a href="/signup.html">Sign up and create an account</a></p>
   </div>
 
-  <script type="module">
-    import { supabase } from "./supabase.js";
-    import { friendlyError } from "./auth.js";
+ <script type="module">
+  import { supabase, setRememberMe } from "./supabase.js";
+  import { friendlyError } from "./auth.js";
 
-    const form = document.getElementById("form");
-    const msg = document.getElementById("msg");
-    const btn = document.getElementById("submitBtn");
+  const form = document.getElementById("form");
+  const msg = document.getElementById("msg");
+  const btn = document.getElementById("submitBtn");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      msg.textContent = ""; msg.className = "msg";
-      btn.disabled = true;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.textContent = ""; msg.className = "msg";
+    btn.disabled = true;
 
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const remember = document.getElementById("remember").checked;
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const remember = document.getElementById("remember").checked;
 
-      // Persist across browser restarts only when "Remember me" is checked.
-      // Otherwise the session lives in sessionStorage (cleared on browser close).
-      if (!remember) {
-        try {
-          await supabase.auth.setSession({
-            access_token: "",
-            refresh_token: "",
-          }); // no-op placeholder; we handle storage below
-        } catch {}
-      }
+    // Tell the storage adapter BEFORE signing in, so the session is written
+    // to the right place (localStorage for remember, sessionStorage otherwise).
+    setRememberMe(remember);
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-      if (error) {
-        msg.textContent = friendlyError(error);
-        msg.className = "msg err";
-        btn.disabled = false;
-        return;
-      }
-
-      // If "Remember me" is unchecked, move the session from localStorage to sessionStorage
-      if (!remember) {
-        const raw = localStorage.getItem("sb-" + new URL(supabase.authUrl || location.origin).host + "-auth-token");
-        if (raw) {
-          sessionStorage.setItem("tandem-session", raw);
-          localStorage.removeItem("sb-" + new URL(supabase.authUrl || location.origin).host + "-auth-token");
-        }
-      }
-
-      window.location.href = "/";
-    });
-  </script>
-</body>
-</html>
+    if (error) {
+      msg.textContent = friendlyError(error);
+      msg.className = "msg err";
+      btn.disabled = false;
+      return;
+    }
+    window.location.href = "/";
+  });
+</script>
