@@ -1,0 +1,87 @@
+/* nav.css — shared top bar for internal pages */
+.tandem-nav {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  border-bottom: 1px solid rgba(31,200,200,0.14);
+}
+.tandem-nav .brand {
+  display: flex; align-items: center; gap: 12px;
+  font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em;
+  color: var(--ink, #0e2a2a); text-decoration: none;
+}
+.tandem-nav .brand .dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: linear-gradient(135deg, #6fe3e3, #14a8a8);
+  box-shadow: 0 0 0 4px rgba(31,200,200,0.14);
+}
+.tandem-nav .menu-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 46px; height: 46px; border-radius: 14px;
+  border: 1px solid rgba(31,200,200,0.28);
+  background: linear-gradient(180deg,#fff,#f0fdfd);
+  box-shadow: 0 2px 8px rgba(14,42,42,0.06);
+  cursor: pointer;
+  transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s cubic-bezier(.22,1,.36,1), border-color .25s cubic-bezier(.22,1,.36,1);
+}
+.tandem-nav .menu-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(14,42,42,.10); border-color: #1fc8c8; }
+.tandem-nav .menu-btn .bars { position: relative; width: 20px; height: 14px; }
+.tandem-nav .menu-btn .bars span { position: absolute; left: 0; height: 2px; width: 100%; background: #0e2a2a; border-radius: 2px; transition: transform .35s cubic-bezier(.22,1,.36,1), opacity .2s, top .35s; }
+.tandem-nav .menu-btn .bars span:nth-child(1) { top: 0; }
+.tandem-nav .menu-btn .bars span:nth-child(2) { top: 6px; }
+.tandem-nav .menu-btn .bars span:nth-child(3) { top: 12px; }
+.tandem-nav .menu-btn.open .bars span:nth-child(1) { top: 6px; transform: rotate(45deg); }
+.tandem-nav .menu-btn.open .bars span:nth-child(2) { opacity: 0; }
+.tandem-nav .menu-btn.open .bars span:nth-child(3) { top: 6px; transform: rotate(-45deg); }
+.tandem-nav .profile {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  text-decoration: none; color: #4a6a6a; font-size: .72rem; font-weight: 600;
+  transition: color .2s;
+}
+.tandem-nav .profile:hover { color: #0d8a8a; }
+.tandem-nav .avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg,#6fe3e3,#14a8a8);
+  display: grid; place-items: center;
+  color: #fff; font-weight: 700; font-size: .95rem;
+  box-shadow: 0 6px 16px rgba(31,200,200,0.35), inset 0 1px 0 rgba(255,255,255,0.4);
+  border: 2px solid #fff;
+  transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s;
+}
+.tandem-nav .profile:hover .avatar { transform: scale(1.06); box-shadow: 0 10px 22px rgba(31,200,200,.45); }
+
+/* Simple drop-down for internal pages */
+.tandem-nav-menu {
+  position: fixed; top: 78px; left: 50%; transform: translateX(-50%) translateY(-12px);
+  width: min(360px, calc(100vw - 32px)); padding: 10px; border-radius: 20px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(31,200,200,0.18);
+  box-shadow: 0 18px 50px rgba(14,42,42,.16);
+  opacity: 0; pointer-events: none; visibility: hidden;
+  transition: opacity .28s cubic-bezier(.22,1,.36,1), transform .35s cubic-bezier(.22,1,.36,1), visibility 0s linear .35s;
+  z-index: 60;
+}
+.tandem-nav-menu.open {
+  opacity: 1; pointer-events: auto; visibility: visible;
+  transform: translateX(-50%) translateY(0);
+  transition: opacity .28s, transform .4s, visibility 0s;
+}
+.tandem-nav-menu a {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: 14px;
+  text-decoration: none; color: #0e2a2a; font-weight: 600; font-size: .95rem;
+  transition: background .2s, transform .2s;
+}
+.tandem-nav-menu a:hover { background: linear-gradient(90deg,#e6fbfb,#f5fffe); transform: translateX(2px); }
+.tandem-nav-menu a .ico {
+  width: 34px; height: 34px; border-radius: 10px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg,#c2f5f5,#eafefe);
+  color: #0d8a8a; font-size: 1rem; flex-shrink: 0;
+}
+.tandem-nav-menu a small { display: block; font-weight: 500; color: #4a6a6a; font-size: .75rem; margin-top: 2px; }

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schedule · Tandem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/nav.css" />
+  <style>
+    :root{
+      --aqua-50:#e6fbfb;--aqua-100:#c2f5f5;--aqua-300:#6fe3e3;--aqua-500:#1fc8c8;--aqua-600:#14a8a8;--aqua-700:#0d8a8a;
+      --ink:#0e2a2a;--ink-soft:#4a6a6a;--danger:#c0392b;
+      --shadow-md:0 8px 28px rgba(14,42,42,.10);--shadow-lg:0 18px 50px rgba(14,42,42,.16);
+      --ease:cubic-bezier(.22,1,.36,1);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);min-height:100vh;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, var(--aqua-100), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, #e9fffb, transparent 55%),
+        linear-gradient(180deg,#f7fffe 0%,#fff 55%,#f4fdfd 100%);
+      -webkit-font-smoothing:antialiased;padding:0 0 60px}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 22px}
+    .head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:22px}
+    .head h1{font-size:1.9rem;font-weight:800;letter-spacing:-.02em}
+    .head .sub{color:var(--ink-soft);font-size:.92rem;margin-top:4px}
+    .gpa{
+      background:linear-gradient(135deg,#fff,#f0fdfd);
+      border:1px solid rgba(31,200,200,.28);border-radius:16px;
+      padding:14px 20px;text-align:right;box-shadow:var(--shadow-md);min-width:170px}
+    .gpa .label{font-size:.72rem;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em}
+    .gpa .val{font-size:1.9rem;font-weight:800;letter-spacing:-.02em;color:var(--aqua-700);margin-top:2px}
+    .gpa .val.none{color:var(--ink-soft);font-size:1.1rem}
+
+    .sync{display:flex;align-items:center;justify-content:space-between;gap:12px;
+      background:rgba(255,255,255,.75);border:1px solid rgba(31,200,200,.18);
+      border-radius:14px;padding:10px 14px;margin-bottom:22px;font-size:.85rem;color:var(--ink-soft)}
+    .sync button{border:none;background:#fff;color:var(--aqua-700);font:inherit;font-weight:700;cursor:pointer;
+      padding:6px 12px;border-radius:8px;border:1.5px solid rgba(31,200,200,.35);transition:background .2s}
+    .sync button:hover{background:#f5fffe}
+
+    .late{
+      background:rgba(255,255,255,.85);border:1px solid rgba(31,200,200,.2);
+      border-radius:16px;padding:16px 20px;margin-bottom:22px;text-align:center;
+      font-weight:600;box-shadow:var(--shadow-md);font-size:1rem}
+    .late.has{color:var(--danger);border-color:rgba(192,57,43,.25)}
+
+    .grid{display:grid;grid-template-columns:280px 1fr;gap:22px}
+    @media (max-width:820px){.grid{grid-template-columns:1fr}}
+
+    .subjects{display:flex;flex-direction:column;gap:10px}
+    .subject-btn{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      width:100%;padding:16px 18px;border-radius:16px;
+      background:rgba(255,255,255,.85);border:1px solid rgba(31,200,200,.22);
+      box-shadow:var(--shadow-md);color:var(--ink);
+      font:inherit;font-weight:700;font-size:.98rem;text-align:left;cursor:pointer;
+      text-decoration:none;
+      transition:transform .22s var(--ease),box-shadow .22s var(--ease),border-color .22s var(--ease);
+    }
+    .subject-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--aqua-500)}
+    .subject-btn .meta{display:flex;flex-direction:column;gap:2px}
+    .subject-btn .meta small{color:var(--ink-soft);font-weight:500;font-size:.78rem}
+    .subject-btn .grade{color:var(--aqua-700);font-weight:800;font-size:.95rem}
+
+    .summary-btn{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      width:100%;padding:16px 18px;border-radius:16px;margin-top:6px;
+      color:#fff;border:none;font:inherit;font-weight:800;font-size:.98rem;text-decoration:none;
+      background:linear-gradient(135deg,var(--aqua-500),var(--aqua-700));
+      box-shadow:0 10px 26px rgba(20,168,168,.35);
+      transition:transform .22s var(--ease),box-shadow .22s var(--ease);
+    }
+    .summary-btn:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(20,168,168,.45)}
+
+    .panel{
+      background:rgba(255,255,255,.75);border:1px solid rgba(31,200,200,.2);
+      border-radius:20px;box-shadow:var(--shadow-md);padding:22px;min-height:320px}
+    .panel h2{font-size:1.05rem;font-weight:800;margin-bottom:12px}
+    .panel p{color:var(--ink-soft);font-size:.9rem;line-height:1.6}
+    .empty-cta{display:inline-flex;margin-top:14px;padding:10px 18px;border-radius:999px;
+      background:linear-gradient(135deg,var(--aqua-500),var(--aqua-700));color:#fff;
+      font-weight:700;text-decoration:none;font-size:.9rem;
+      box-shadow:0 8px 20px rgba(20,168,168,.3);transition:transform .2s var(--ease)}
+    .empty-cta:hover{transform:translateY(-2px)}
+  </style>
+</head>
+<body>
+  <div id="navHost"></div>
+
+  <div class="wrap">
+    <div class="head">
+      <div>
+        <h1 id="weekLabel">Week — of Quarter —</h1>
+        <div class="sub" id="rangeLabel">Mon — to Sun —</div>
+      </div>
+      <div class="gpa">
+        <div class="label">GPA</div>
+        <div class="val none" id="gpaVal">Not synced</div>
+      </div>
+    </div>
+
+    <div class="sync">
+      <span id="syncStatus">GradeLink not connected — subjects shown are the ones you added in Profile.</span>
+      <button id="refreshBtn">Refresh</button>
+    </div>
+
+    <div class="late" id="lateBox">0 late assignments</div>
+
+    <div class="grid">
+      <div>
+        <div class="subjects" id="subjectsList"></div>
+        <a class="summary-btn" href="/summary.html">
+          <span>Week Assignment Summary</span>
+          <span>→</span>
+        </a>
+      </div>
+      <div class="panel" id="panel">
+        <h2>Welcome to your schedule</h2>
+        <p>Pick a subject on the left to see its page — assignments, teacher notes, grade, and upload button.</p>
+        <p style="margin-top:10px">No subjects yet? Add them from your Profile, or wait for GradeLink to sync them automatically.</p>
+        <a class="empty-cta" href="/profile.html#subjects">Add subjects in Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from "./auth.js";
+    import { supabase } from "./supabase.js";
+    import { mountNav } from "./nav.js";
+    import { currentQuarter, currentWeekOfQuarter, currentWeekRange } from "./dates.js";
+
+    const session = await requireAuth();
+    if (!session) throw new Error("not signed in");
+
+    await mountNav();
+
+    // Get user's timezone from profile
+    const { data: profile } = await supabase
+      .from("profiles").select("timezone").eq("id", session.user.id).single();
+    const tz = profile?.timezone || "America/New_York";
+
+    // Week + quarter labels
+    const q = currentQuarter(undefined, undefined);
+    const w = currentWeekOfQuarter();
+    document.getElementById("weekLabel").textContent = `Week ${w} of Quarter ${q}`;
+    const range = currentWeekRange(tz);
+    const fmt = (d) => new Date(d + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    document.getElementById("rangeLabel").textContent = `${fmt(range.monday)} — ${fmt(range.sunday)}`;
+
+    // Load subjects for current quarter
+    const { data: subjects } = await supabase
+      .from("subjects")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .eq("quarter", "Q" + q)
+      .order("sort_order", { ascending: true });
+
+    const list = document.getElementById("subjectsList");
+
+    if (!subjects || subjects.length === 0) {
+      list.innerHTML = `
+        <div style="padding:16px;background:rgba(255,255,255,.6);border:1.5px dashed rgba(31,200,200,.4);border-radius:14px;color:#4a6a6a;font-size:.88rem;text-align:center">
+          No subjects yet for Q${q}.<br>
+          <a href="/profile.html#subjects" style="color:#0d8a8a;font-weight:700;text-decoration:none">Add them in Profile</a>
+        </div>`;
+    } else {
+      subjects.forEach((s) => {
+        const a = document.createElement("a");
+        a.className = "subject-btn";
+        a.href = `/subject.html?id=${encodeURIComponent(s.id)}`;
+        a.innerHTML = `
+          <div class="meta">
+            <span>${s.name}</span>
+            <small>${s.teacher ? s.teacher : "No teacher set"}</small>
+          </div>
+          <div class="grade">${s.grade || "—"}</div>
+        `;
+        list.appendChild(a);
+      });
+    }
+
+    // Late box: nothing yet (no assignments table) — fixed 0
+    const lateBox = document.getElementById("lateBox");
+    lateBox.textContent = "0 late assignments";
+
+    // Refresh button — placeholder until scraper exists
+    document.getElementById("refreshBtn").addEventListener("click", () => {
+      location.reload();
+    });
+
+    document.getElementById("syncStatus").textContent =
+      "GradeLink not connected — subjects shown are the ones you added in Profile.";
+  </script>
+</body>
+</html>

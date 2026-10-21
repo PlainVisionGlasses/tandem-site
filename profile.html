@@ -34,8 +34,8 @@
     .link-group h3{font-size:.82rem;font-weight:700;color:var(--aqua-700);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(31,200,200,.18)}
     .link-row{margin-bottom:12px}
     .link-row label{display:block;font-size:.82rem;font-weight:600;color:var(--ink-soft);margin-bottom:5px}
-    .link-row input{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(31,200,200,.25);background:#fff;font:inherit;font-size:.9rem;color:var(--ink);transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
-    .link-row input:focus{outline:none;border-color:var(--aqua-500);box-shadow:0 0 0 4px rgba(31,200,200,.14)}
+    .link-row input, .link-row select{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(31,200,200,.25);background:#fff;font:inherit;font-size:.9rem;color:var(--ink);transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+    .link-row input:focus, .link-row select:focus{outline:none;border-color:var(--aqua-500);box-shadow:0 0 0 4px rgba(31,200,200,.14)}
     .link-row small{display:block;margin-top:4px;color:var(--ink-soft);font-size:.75rem}
     .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
     .btn{padding:11px 22px;border-radius:999px;font:inherit;font-weight:700;font-size:.92rem;cursor:pointer;text-decoration:none;border:none;transition:transform .2s var(--ease),box-shadow .2s var(--ease),opacity .2s}
@@ -78,6 +78,45 @@
       </form>
     </div>
 
+    <div class="card" id="subjects">
+      <h2><span class="ico">📚</span>Subjects (Q<span id="qLabel">1</span>)</h2>
+      <p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:16px">
+        These appear on your Schedule page as buttons. Each opens a subject page with assignments, notes, and grade.
+        Add one per class you take this quarter.
+      </p>
+
+      <div id="subjectsList" style="margin-bottom:14px"></div>
+
+      <div class="link-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div>
+          <label>Course name</label>
+          <input id="newSubName" placeholder="Algebra Two" />
+        </div>
+        <div>
+          <label>Teacher</label>
+          <input id="newSubTeacher" placeholder="Mr. Smith" />
+        </div>
+        <div>
+          <label>Category</label>
+          <select id="newSubCategory">
+            <option value="math">Math</option>
+            <option value="science">Science</option>
+            <option value="english">English</option>
+            <option value="history">History</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label>Grade (optional)</label>
+          <input id="newSubGrade" placeholder="A-" />
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="addSubjectBtn">Add subject</button>
+      </div>
+      <div class="msg" id="subjectsMsg"></div>
+    </div>
+
     <div class="card">
       <h2><span class="ico">⏻</span>Session</h2>
       <div class="actions">
@@ -91,6 +130,7 @@
     import { requireAuth, logout } from "./auth.js";
     import { supabase } from "./supabase.js";
     import { LINK_GROUPS } from "./links-config.js";
+    import { currentQuarter } from "./dates.js";
 
     const session = await requireAuth();
     if (!session) throw new Error("not logged in");
@@ -115,7 +155,7 @@
     const urlMap = {};
     (rows || []).forEach((r) => { urlMap[r.key] = r.url; });
 
-    // ---- Build form
+    // ---- Build link form
     const groupsEl = document.getElementById("linkGroups");
     LINK_GROUPS.forEach((group) => {
       const g = document.createElement("div");
@@ -143,7 +183,7 @@
       groupsEl.appendChild(g);
     });
 
-    // ---- Save
+    // ---- Save links
     const form = document.getElementById("linksForm");
     const msg = document.getElementById("linksMsg");
     const saveBtn = document.getElementById("saveLinksBtn");
@@ -175,6 +215,90 @@
       saveBtn.disabled = false;
       setTimeout(() => { msg.textContent = ""; msg.className = "msg"; }, 2500);
     });
+
+    // ---- Subjects editor ----
+    const qNum = currentQuarter();
+    const qKey = "Q" + qNum;
+    document.getElementById("qLabel").textContent = qNum;
+
+    async function refreshSubjects() {
+      const { data, error } = await supabase
+        .from("subjects").select("*")
+        .eq("user_id", session.user.id).eq("quarter", qKey)
+        .order("sort_order", { ascending: true });
+
+      const list = document.getElementById("subjectsList");
+      list.innerHTML = "";
+
+      if (error) {
+        list.innerHTML = `<div style="color:#c0392b;font-size:.88rem;padding:8px 0">Could not load subjects: ${error.message}</div>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        list.innerHTML = `<div style="color:#4a6a6a;font-size:.88rem;padding:8px 0">No subjects yet for ${qKey}.</div>`;
+        return;
+      }
+
+      data.forEach((s) => {
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid rgba(31,200,200,.2);border-radius:12px;margin-bottom:8px";
+        row.innerHTML = `
+          <div style="flex:1">
+            <div style="font-weight:700">${s.name}</div>
+            <div style="font-size:.8rem;color:#4a6a6a">${s.teacher || "No teacher"} · ${s.grade || "—"}</div>
+          </div>
+          <button class="btn btn-ghost" style="padding:6px 12px;font-size:.8rem" data-del="${s.id}">Remove</button>
+        `;
+        list.appendChild(row);
+      });
+
+      list.querySelectorAll("[data-del]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await supabase.from("subjects").delete().eq("id", btn.dataset.del);
+          refreshSubjects();
+        });
+      });
+    }
+
+    document.getElementById("addSubjectBtn").addEventListener("click", async () => {
+      const sMsg = document.getElementById("subjectsMsg");
+      sMsg.textContent = ""; sMsg.className = "msg";
+
+      const name = document.getElementById("newSubName").value.trim();
+      const teacher = document.getElementById("newSubTeacher").value.trim();
+      const category = document.getElementById("newSubCategory").value;
+      const grade = document.getElementById("newSubGrade").value.trim();
+
+      if (!name) {
+        sMsg.textContent = "Course name is required.";
+        sMsg.className = "msg err";
+        return;
+      }
+
+      const { error } = await supabase.from("subjects").insert({
+        user_id: session.user.id,
+        quarter: qKey,
+        name, teacher, category, grade,
+        sort_order: Math.floor(Date.now() / 1000) % 100000,
+      });
+
+      if (error) {
+        sMsg.textContent = "Could not add: " + error.message;
+        sMsg.className = "msg err";
+        return;
+      }
+
+      sMsg.textContent = "Subject added ✓";
+      sMsg.className = "msg ok";
+      document.getElementById("newSubName").value = "";
+      document.getElementById("newSubTeacher").value = "";
+      document.getElementById("newSubGrade").value = "";
+      refreshSubjects();
+      setTimeout(() => { sMsg.textContent = ""; sMsg.className = "msg"; }, 2000);
+    });
+
+    refreshSubjects();
 
     document.getElementById("logoutBtn").addEventListener("click", logout);
   </script>
