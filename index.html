@@ -12,7 +12,7 @@
       --aqua-50:  #e6fbfb;
       --aqua-100: #c2f5f5;
       --aqua-300: #6fe3e3;
-      --aqua-500: #1fc8c8;  /* primary Tandem aqua */
+      --aqua-500: #1fc8c8;
       --aqua-600: #14a8a8;
       --aqua-700: #0d8a8a;
       --ink:      #0e2a2a;
@@ -24,9 +24,7 @@
       --radius: 16px;
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     html, body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       color: var(--ink);
@@ -37,297 +35,138 @@
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
     }
-
-    /* ---------- Top bar ---------- */
     .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 16px 22px;
       background: rgba(255, 255, 255, 0.72);
       backdrop-filter: saturate(180%) blur(18px);
       -webkit-backdrop-filter: saturate(180%) blur(18px);
       border-bottom: 1px solid rgba(31, 200, 200, 0.14);
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 800;
-      font-size: 1.35rem;
-      letter-spacing: -0.02em;
-      color: var(--ink);
-    }
-    .brand .dot {
-      width: 12px; height: 12px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--aqua-300), var(--aqua-600));
-      box-shadow: 0 0 0 4px rgba(31, 200, 200, 0.14);
-    }
-
-    /* ---------- Hamburger ---------- */
-    .menu-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 46px; height: 46px;
-      border-radius: 14px;
-      border: 1px solid rgba(31, 200, 200, 0.28);
-      background: linear-gradient(180deg, #ffffff, #f0fdfd);
-      box-shadow: var(--shadow-sm);
-      cursor: pointer;
-      transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
-    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em; color: var(--ink); }
+    .brand .dot { width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(135deg, var(--aqua-300), var(--aqua-600)); box-shadow: 0 0 0 4px rgba(31, 200, 200, 0.14); }
+    .menu-btn { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 14px; border: 1px solid rgba(31, 200, 200, 0.28); background: linear-gradient(180deg, #ffffff, #f0fdfd); box-shadow: var(--shadow-sm); cursor: pointer; transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease); }
     .menu-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); border-color: var(--aqua-500); }
     .menu-btn:active { transform: translateY(0) scale(0.97); }
-
-    .menu-btn .bars {
-      position: relative;
-      width: 20px; height: 14px;
-    }
-    .menu-btn .bars span {
-      position: absolute; left: 0; height: 2px; width: 100%;
-      background: var(--ink);
-      border-radius: 2px;
-      transition: transform .35s var(--ease), opacity .2s var(--ease), top .35s var(--ease);
-    }
+    .menu-btn .bars { position: relative; width: 20px; height: 14px; }
+    .menu-btn .bars span { position: absolute; left: 0; height: 2px; width: 100%; background: var(--ink); border-radius: 2px; transition: transform .35s var(--ease), opacity .2s var(--ease), top .35s var(--ease); }
     .menu-btn .bars span:nth-child(1) { top: 0; }
     .menu-btn .bars span:nth-child(2) { top: 6px; }
     .menu-btn .bars span:nth-child(3) { top: 12px; }
-
     .menu-btn.open .bars span:nth-child(1) { top: 6px; transform: rotate(45deg); }
     .menu-btn.open .bars span:nth-child(2) { opacity: 0; }
     .menu-btn.open .bars span:nth-child(3) { top: 6px; transform: rotate(-45deg); }
-
-    /* ---------- Profile corner ---------- */
-    .profile {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      text-decoration: none;
-      color: var(--ink-soft);
-      font-size: .72rem;
-      font-weight: 600;
-      letter-spacing: .02em;
-      transition: color .2s var(--ease);
-    }
+    .profile { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--ink-soft); font-size: .72rem; font-weight: 600; letter-spacing: .02em; transition: color .2s var(--ease); }
     .profile:hover { color: var(--aqua-700); }
-    .avatar {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--aqua-300), var(--aqua-600));
-      display: grid; place-items: center;
-      color: white; font-weight: 700; font-size: .95rem;
-      box-shadow: 0 6px 16px rgba(31, 200, 200, 0.35), inset 0 1px 0 rgba(255,255,255,0.4);
-      border: 2px solid white;
-      transition: transform .25s var(--ease), box-shadow .25s var(--ease);
-    }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--aqua-300), var(--aqua-600)); display: grid; place-items: center; color: white; font-weight: 700; font-size: .95rem; box-shadow: 0 6px 16px rgba(31, 200, 200, 0.35), inset 0 1px 0 rgba(255,255,255,0.4); border: 2px solid white; transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
     .profile:hover .avatar { transform: scale(1.06); box-shadow: 0 10px 22px rgba(31, 200, 200, 0.45); }
-
-    /* ---------- Dropdown ---------- */
-    .dropdown {
-      position: fixed;
-      top: 78px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-12px);
-      width: min(360px, calc(100vw - 32px));
-      padding: 10px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      border: 1px solid rgba(31, 200, 200, 0.18);
-      box-shadow: var(--shadow-lg);
-      opacity: 0;
-      pointer-events: none;
-      visibility: hidden;
-      transition: opacity .28s var(--ease), transform .35s var(--ease), visibility 0s linear .35s;
-      z-index: 60;
-    }
-    .dropdown.open {
-      opacity: 1;
-      pointer-events: auto;
-      visibility: visible;
-      transform: translateX(-50%) translateY(0);
-      transition: opacity .28s var(--ease), transform .4s var(--ease), visibility 0s;
-    }
-
-    .dropdown a {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      text-decoration: none;
-      color: var(--ink);
-      font-weight: 600;
-      font-size: .95rem;
-      transition: background .2s var(--ease), transform .2s var(--ease);
-      opacity: 0;
-      transform: translateY(6px);
-    }
-    .dropdown.open a {
-      opacity: 1;
-      transform: translateY(0);
-      transition: opacity .35s var(--ease), transform .35s var(--ease), background .2s var(--ease);
-    }
+    .dropdown { position: fixed; top: 78px; left: 50%; transform: translateX(-50%) translateY(-12px); width: min(360px, calc(100vw - 32px)); padding: 10px; border-radius: 20px; background: rgba(255, 255, 255, 0.92); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border: 1px solid rgba(31, 200, 200, 0.18); box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none; visibility: hidden; transition: opacity .28s var(--ease), transform .35s var(--ease), visibility 0s linear .35s; z-index: 60; }
+    .dropdown.open { opacity: 1; pointer-events: auto; visibility: visible; transform: translateX(-50%) translateY(0); transition: opacity .28s var(--ease), transform .4s var(--ease), visibility 0s; }
+    .dropdown a { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; text-decoration: none; color: var(--ink); font-weight: 600; font-size: .95rem; transition: background .2s var(--ease), transform .2s var(--ease); opacity: 0; transform: translateY(6px); }
+    .dropdown.open a { opacity: 1; transform: translateY(0); transition: opacity .35s var(--ease), transform .35s var(--ease), background .2s var(--ease); }
     .dropdown.open a:nth-child(1) { transition-delay: .04s; }
     .dropdown.open a:nth-child(2) { transition-delay: .08s; }
     .dropdown.open a:nth-child(3) { transition-delay: .12s; }
     .dropdown.open a:nth-child(4) { transition-delay: .16s; }
     .dropdown.open a:nth-child(5) { transition-delay: .20s; }
+    .dropdown a:hover { background: linear-gradient(90deg, var(--aqua-50), #f5fffe); transform: translateX(2px); }
+    .dropdown a .ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(135deg, var(--aqua-100), #eafefe); color: var(--aqua-700); font-size: 1rem; flex-shrink: 0; }
+    .dropdown a small { display: block; font-weight: 500; color: var(--ink-soft); font-size: .75rem; margin-top: 2px; }
+    .hero { max-width: 760px; margin: 90px auto 60px; padding: 0 24px; text-align: center; }
+    .hero h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; background: linear-gradient(135deg, var(--ink) 30%, var(--aqua-700) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { margin-top: 18px; font-size: 1.1rem; color: var(--ink-soft); max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.6; }
 
-    .dropdown a:hover {
-      background: linear-gradient(90deg, var(--aqua-50), #f5fffe);
-      transform: translateX(2px);
+    /* ---------- Auth buttons ---------- */
+    .auth-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-top: 34px;
     }
-    .dropdown a .ico {
-      width: 34px; height: 34px;
-      border-radius: 10px;
-      display: grid; place-items: center;
-      background: linear-gradient(135deg, var(--aqua-100), #eafefe);
-      color: var(--aqua-700);
-      font-size: 1rem;
-      flex-shrink: 0;
-    }
-    .dropdown a small {
-      display: block;
-      font-weight: 500;
-      color: var(--ink-soft);
-      font-size: .75rem;
-      margin-top: 2px;
-    }
-    .dropdown .divider {
-      height: 1px;
-      margin: 6px 12px;
-      background: linear-gradient(90deg, transparent, rgba(31,200,200,0.25), transparent);
-    }
-
-    /* ---------- Hero ---------- */
-    .hero {
-      max-width: 760px;
-      margin: 90px auto 60px;
-      padding: 0 24px;
-      text-align: center;
-    }
-    .hero h1 {
-      font-size: clamp(2.2rem, 5vw, 3.4rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      background: linear-gradient(135deg, var(--ink) 30%, var(--aqua-700) 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero p {
-      margin-top: 18px;
-      font-size: 1.1rem;
-      color: var(--ink-soft);
-      max-width: 520px;
-      margin-left: auto;
-      margin-right: auto;
-      line-height: 1.6;
-    }
-    .cta {
+    .btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 10px;
-      margin-top: 30px;
-      padding: 14px 26px;
+      width: 220px;
+      padding: 14px 24px;
       border-radius: 999px;
-      border: none;
       font: inherit;
       font-weight: 700;
       font-size: 1rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .25s var(--ease), box-shadow .25s var(--ease), background .25s var(--ease), border-color .25s var(--ease);
+      border: none;
+    }
+    .btn-primary {
       color: white;
       background: linear-gradient(135deg, var(--aqua-500), var(--aqua-700));
       box-shadow: 0 10px 26px rgba(20, 168, 168, 0.35);
-      cursor: pointer;
-      transition: transform .25s var(--ease), box-shadow .25s var(--ease);
     }
-    .cta:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(20, 168, 168, 0.45); }
-    .cta:active { transform: translateY(0); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(20, 168, 168, 0.45); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-ghost {
+      color: var(--aqua-700);
+      background: rgba(255, 255, 255, 0.7);
+      border: 1.5px solid rgba(31, 200, 200, 0.4);
+      backdrop-filter: blur(10px);
+    }
+    .btn-ghost:hover { transform: translateY(-2px); background: #ffffff; border-color: var(--aqua-500); box-shadow: 0 10px 24px rgba(31, 200, 200, 0.18); }
+    .btn-ghost:active { transform: translateY(0); }
 
-    /* ---------- Backdrop for dropdown ---------- */
-    .backdrop {
-      position: fixed; inset: 0;
-      background: rgba(10, 40, 40, 0.0);
-      backdrop-filter: blur(0);
-      transition: background .3s var(--ease), backdrop-filter .3s var(--ease);
-      pointer-events: none;
-      z-index: 55;
-    }
-    .backdrop.show {
-      background: rgba(10, 40, 40, 0.08);
-      backdrop-filter: blur(2px);
-      pointer-events: auto;
-    }
-
-    @media (max-width: 480px) {
-      .topbar { padding: 12px 16px; }
-      .hero { margin-top: 60px; }
-    }
+    .backdrop { position: fixed; inset: 0; background: rgba(10, 40, 40, 0); backdrop-filter: blur(0); transition: background .3s var(--ease), backdrop-filter .3s var(--ease); pointer-events: none; z-index: 55; }
+    .backdrop.show { background: rgba(10, 40, 40, 0.08); backdrop-filter: blur(2px); pointer-events: auto; }
+    @media (max-width: 480px) { .topbar { padding: 12px 16px; } .hero { margin-top: 60px; } }
   </style>
 </head>
 <body>
-
-  <!-- Backdrop (dims page when menu open) -->
   <div class="backdrop" id="backdrop"></div>
 
-  <!-- Top bar -->
   <header class="topbar">
     <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false">
       <span class="bars"><span></span><span></span><span></span></span>
     </button>
-
     <div class="brand"><span class="dot"></span>Tandem</div>
-
     <a href="/profile.html" class="profile" aria-label="Go to profile">
       <div class="avatar" id="avatar">T</div>
       <span>Profile</span>
     </a>
   </header>
 
-  <!-- Dropdown menu -->
   <nav class="dropdown" id="dropdown" aria-hidden="true">
-    <a href="https://example.com/store" target="_blank" rel="noopener">
-      <span class="ico">🛍️</span>
-      <span>Store<small>School clothes store</small></span>
+    <a href="https://example.com/store" target="_blank" rel="noopener" data-gated="true">
+      <span class="ico">🛍️</span><span>Store<small>School clothes store</small></span>
     </a>
-    <a href="https://example.com/gradelink" target="_blank" rel="noopener">
-      <span class="ico">📊</span>
-      <span>GradeLink<small>Open your GradeLink account</small></span>
+    <a href="https://example.com/gradelink" target="_blank" rel="noopener" data-gated="true">
+      <span class="ico">📊</span><span>GradeLink<small>Open your GradeLink account</small></span>
     </a>
-    <a href="https://example.com/utf" target="_blank" rel="noopener">
-      <span class="ico">🎓</span>
-      <span>UTF<small>University of Toccoa Falls</small></span>
+    <a href="https://example.com/utf" target="_blank" rel="noopener" data-gated="true">
+      <span class="ico">🎓</span><span>UTF<small>University of Toccoa Falls</small></span>
     </a>
-    <a href="/schedule.html">
-      <span class="ico">🗓️</span>
-      <span>Schedule<small>Week, grades & assignments</small></span>
+    <a href="/schedule.html" data-gated="true">
+      <span class="ico">🗓️</span><span>Schedule<small>Week, grades & assignments</small></span>
     </a>
-    <a href="/mail.html">
-      <span class="ico">✉️</span>
-      <span>Mail<small>Choose your inbox</small></span>
+    <a href="/mail.html" data-gated="true">
+      <span class="ico">✉️</span><span>Mail<small>Choose your inbox</small></span>
     </a>
   </nav>
 
-  <!-- Hero -->
   <main class="hero">
     <h1>Everything school,<br>in one calm place.</h1>
     <p>Your links, schedule, grades, and assignments — organized the Tandem way.</p>
-    <button class="cta" onclick="document.getElementById('menuBtn').click()">
-      Get started
-      <span>→</span>
-    </button>
+
+    <div class="auth-actions">
+      <a class="btn btn-primary" href="/login.html">Log in</a>
+      <a class="btn btn-ghost" href="/signup.html">Sign up</a>
+    </div>
   </main>
 
-  <script>
+  <script type="module">
+    import { isLoggedIn, LOGIN_URL } from './config.js';
+
     const menuBtn = document.getElementById('menuBtn');
     const dropdown = document.getElementById('dropdown');
     const backdrop = document.getElementById('backdrop');
@@ -340,14 +179,19 @@
       dropdown.setAttribute('aria-hidden', String(!open));
     }
 
-    menuBtn.addEventListener('click', () => {
-      setOpen(!dropdown.classList.contains('open'));
-    });
+    menuBtn.addEventListener('click', () => setOpen(!dropdown.classList.contains('open')));
     backdrop.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
 
-    // Close on Escape
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') setOpen(false);
+    // --- Auth gate on the five menu buttons ---
+    document.querySelectorAll('.dropdown a[data-gated="true"]').forEach((link) => {
+      link.addEventListener('click', (e) => {
+        if (!isLoggedIn()) {
+          e.preventDefault();
+          window.location.href = LOGIN_URL;
+        }
+        // If logged in: default behavior runs (new tab for externals, same tab for internals)
+      });
     });
   </script>
 </body>
