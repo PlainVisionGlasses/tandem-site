@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign up · Tandem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --aqua-50:#e6fbfb;--aqua-100:#c2f5f5;--aqua-300:#6fe3e3;--aqua-500:#1fc8c8;
+      --aqua-600:#14a8a8;--aqua-700:#0d8a8a;--ink:#0e2a2a;--ink-soft:#4a6a6a;
+      --shadow-md:0 8px 28px rgba(14,42,42,.10);--shadow-lg:0 18px 50px rgba(14,42,42,.16);
+      --ease:cubic-bezier(.22,1,.36,1);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, var(--aqua-100), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, #e9fffb, transparent 55%),
+        linear-gradient(180deg,#f7fffe 0%,#fff 55%,#f4fdfd 100%);
+      min-height:100vh;-webkit-font-smoothing:antialiased;
+      display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{width:100%;max-width:440px;background:rgba(255,255,255,.8);
+      backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+      border:1px solid rgba(31,200,200,.2);border-radius:24px;box-shadow:var(--shadow-lg);
+      padding:34px 30px}
+    .brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:6px;
+      font-weight:800;font-size:1.3rem}
+    .brand .dot{width:11px;height:11px;border-radius:50%;
+      background:linear-gradient(135deg,var(--aqua-300),var(--aqua-600));
+      box-shadow:0 0 0 4px rgba(31,200,200,.14)}
+    h1{text-align:center;font-size:1.55rem;font-weight:800;letter-spacing:-.02em;margin-top:10px}
+    .sub{text-align:center;color:var(--ink-soft);font-size:.9rem;margin-top:6px;margin-bottom:22px}
+    label{display:block;font-size:.8rem;font-weight:600;color:var(--ink-soft);margin:14px 0 6px}
+    input,select{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(31,200,200,.25);
+      background:#fff;font:inherit;font-size:.95rem;color:var(--ink);transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+    input:focus,select:focus{outline:none;border-color:var(--aqua-500);box-shadow:0 0 0 4px rgba(31,200,200,.14)}
+    .btn{width:100%;margin-top:22px;padding:14px;border:none;border-radius:999px;font:inherit;
+      font-weight:700;font-size:1rem;color:#fff;cursor:pointer;
+      background:linear-gradient(135deg,var(--aqua-500),var(--aqua-700));
+      box-shadow:0 10px 26px rgba(20,168,168,.35);
+      transition:transform .25s var(--ease),box-shadow .25s var(--ease),opacity .2s}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(20,168,168,.45)}
+    .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .msg{margin-top:14px;font-size:.88rem;text-align:center;min-height:1.2em}
+    .msg.err{color:#c0392b}
+    .msg.ok{color:var(--aqua-700)}
+    .foot{text-align:center;margin-top:18px;font-size:.88rem;color:var(--ink-soft)}
+    .foot a{color:var(--aqua-700);font-weight:600;text-decoration:none}
+    .foot a:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand"><span class="dot"></span>Tandem</div>
+    <h1>Create your account</h1>
+    <p class="sub">Are you new here? Sign up and create an account.</p>
+
+    <form id="form">
+      <label for="display_name">Full name</label>
+      <input id="display_name" type="text" required placeholder="Bob Smith" autocomplete="name" />
+
+      <label for="username">Username</label>
+      <input id="username" type="text" required placeholder="bobsmith" autocomplete="username" />
+
+      <label for="email">Email</label>
+      <input id="email" type="email" required placeholder="you@example.com" autocomplete="email" />
+
+      <label for="password">Password</label>
+      <input id="password" type="password" required minlength="6" placeholder="At least 6 characters" autocomplete="new-password" />
+
+      <label for="timezone">Timezone</label>
+      <select id="timezone"></select>
+
+      <button class="btn" type="submit" id="submitBtn">Sign up</button>
+      <div class="msg" id="msg"></div>
+    </form>
+
+    <p class="foot">Already have an account? <a href="/login.html">Log in</a></p>
+  </div>
+
+  <script type="module">
+    import { supabase } from "./supabase.js";
+    import { friendlyError } from "./auth.js";
+
+    // Fill timezone dropdown with the user's current timezone preselected
+    const tzSelect = document.getElementById("timezone");
+    const zones = Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : ["America/New_York","America/Chicago","America/Denver","America/Los_Angeles"];
+    const current = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    zones.forEach((z) => {
+      const o = document.createElement("option");
+      o.value = z; o.textContent = z;
+      if (z === current) o.selected = true;
+      tzSelect.appendChild(o);
+    });
+
+    const form = document.getElementById("form");
+    const msg = document.getElementById("msg");
+    const btn = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.textContent = ""; msg.className = "msg";
+      btn.disabled = true;
+
+      const display_name = document.getElementById("display_name").value.trim();
+      const username = document.getElementById("username").value.trim().toLowerCase();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const timezone = tzSelect.value;
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { display_name, username, timezone },
+        },
+      });
+
+      if (error) {
+        msg.textContent = friendlyError(error);
+        msg.className = "msg err";
+        btn.disabled = false;
+        return;
+      }
+
+      msg.textContent = "Account created! Redirecting…";
+      msg.className = "msg ok";
+      window.location.href = "/";
+    });
+  </script>
+</body>
+</html>
