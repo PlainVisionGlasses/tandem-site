@@ -85,6 +85,19 @@
       gap: 12px;
       margin-top: 34px;
     }
+
+    .welcome-msg {
+  margin-top: 34px;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--ink) 30%, var(--aqua-700) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+}
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -158,42 +171,78 @@
     <h1>Everything school,<br>in one calm place.</h1>
     <p>Your links, schedule, grades, and assignments — organized the Tandem way.</p>
 
-    <div class="auth-actions">
-      <a class="btn btn-primary" href="/login.html">Log in</a>
-      <a class="btn btn-ghost" href="/signup.html">Sign up</a>
-    </div>
+    <div class="auth-actions" id="authActions">
+  <a class="btn btn-primary" href="/login.html">Log in</a>
+  <a class="btn btn-ghost" href="/signup.html">Sign up</a>
+</div>
+<div class="welcome-msg" id="welcomeMsg" style="display:none"></div>
   </main>
 
-  <script type="module">
-    import { isLoggedIn } from './auth.js';
-const LOGIN_URL = '/login.html';
+<script type="module">
+  import { isLoggedIn } from './auth.js';
+  import { supabase } from './supabase.js';
 
-    const menuBtn = document.getElementById('menuBtn');
-    const dropdown = document.getElementById('dropdown');
-    const backdrop = document.getElementById('backdrop');
+  const LOGIN_URL = '/login.html';
 
-    function setOpen(open) {
-      menuBtn.classList.toggle('open', open);
-      dropdown.classList.toggle('open', open);
-      backdrop.classList.toggle('show', open);
-      menuBtn.setAttribute('aria-expanded', String(open));
-      dropdown.setAttribute('aria-hidden', String(!open));
+  const menuBtn = document.getElementById('menuBtn');
+  const dropdown = document.getElementById('dropdown');
+  const backdrop = document.getElementById('backdrop');
+  const avatar = document.getElementById('avatar');
+  const authActions = document.getElementById('authActions');
+  const welcomeMsg = document.getElementById('welcomeMsg');
+
+  function setOpen(open) {
+    menuBtn.classList.toggle('open', open);
+    dropdown.classList.toggle('open', open);
+    backdrop.classList.toggle('show', open);
+    menuBtn.setAttribute('aria-expanded', String(open));
+    dropdown.setAttribute('aria-hidden', String(!open));
+  }
+
+  menuBtn.addEventListener('click', () => setOpen(!dropdown.classList.contains('open')));
+  backdrop.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+
+  // Auth gate on menu buttons
+  document.querySelectorAll('.dropdown a[data-gated="true"]').forEach((link) => {
+    link.addEventListener('click', async (e) => {
+      if (!(await isLoggedIn())) {
+        e.preventDefault();
+        window.location.href = LOGIN_URL;
+      }
+    });
+  });
+
+  // --- Swap hero buttons for welcome message when signed in ---
+  async function applyAuthUI() {
+    if (!authActions || !welcomeMsg) return; // safety
+
+    const loggedIn = await isLoggedIn();
+    if (!loggedIn) {
+      authActions.style.display = 'flex';
+      welcomeMsg.style.display = 'none';
+      return;
     }
 
-    menuBtn.addEventListener('click', () => setOpen(!dropdown.classList.contains('open')));
-    backdrop.addEventListener('click', () => setOpen(false));
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      authActions.style.display = 'flex';
+      welcomeMsg.style.display = 'none';
+      return;
+    }
 
-    // --- Auth gate on the five menu buttons ---
-    document.querySelectorAll('.dropdown a[data-gated="true"]').forEach((link) => {
-      link.addEventListener('click', (e) => {
-        if (!isLoggedIn()) {
-          e.preventDefault();
-          window.location.href = LOGIN_URL;
-        }
-        // If logged in: default behavior runs (new tab for externals, same tab for internals)
-      });
-    });
-  </script>
+    const { data: profile } = await supabase
+      .from('profiles').select('display_name,username').eq('id', user.id).single();
+
+    const name = profile?.username || profile?.display_name || 'friend';
+    authActions.style.display = 'none';
+    welcomeMsg.style.display = 'block';
+    welcomeMsg.textContent = `Welcome ${name}!`;
+    if (avatar) avatar.textContent = (name[0] || 'T').toUpperCase();
+  }
+
+  applyAuthUI();
+  supabase.auth.onAuthStateChange(() => { applyAuthUI(); });
+</script>
 </body>
 </html>

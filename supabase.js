@@ -1,23 +1,17 @@
 // supabase.js
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-export const SUPABASE_URL = "https://hbraxlqiuymtttldeogp.supabase.co";   // your Project URL
-export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhicmF4bHFpdXltdHR0bGRlb2dwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MDM1MzUsImV4cCI6MjEwODE3OTUzNX0.tTs0V1M01IQ8flwa4CYoBIWnURzW0Cbd0sVd-RPdtLo";           // your anon key
+export const SUPABASE_URL = "https://hbraxlqiuymtttldeogp.supabase.co";
+export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhicmF4bHFpdXltdHR0bGRlb2dwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MDM1MzUsImV4cCI6MjEwODE3OTUzNX0.tTs0V1M01IQ8flwa4CYoBIWnURzW0Cbd0sVd-RPdtLo";
 
-// --- Hybrid storage adapter -------------------------------------------------
-// Default: session-only (cleared when browser closes).
-// When "Remember me" is checked, we set REMEMBER_FLAG in localStorage and the
-// adapter switches to localStorage (persists indefinitely).
 const REMEMBER_FLAG = "tandem_remember_me";
 
+// Session-only by default. localStorage only when REMEMBER_FLAG === "true".
 const hybridStorage = {
   getItem(key) {
-    // Prefer sessionStorage (fast path), fall back to localStorage when remembering
     const s = sessionStorage.getItem(key);
     if (s !== null) return s;
-    if (localStorage.getItem(REMEMBER_FLAG) === "true") {
-      return localStorage.getItem(key);
-    }
+    if (localStorage.getItem(REMEMBER_FLAG) === "true") return localStorage.getItem(key);
     return null;
   },
   setItem(key, value) {
