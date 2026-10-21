@@ -87,16 +87,16 @@
     }
 
     .welcome-msg {
-  margin-top: 34px;
-  font-size: clamp(1.4rem, 3vw, 2rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--ink) 30%, var(--aqua-700) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-align: center;
-}
+      margin-top: 34px;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--ink) 30%, var(--aqua-700) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+    }
 
     .btn {
       display: inline-flex;
@@ -150,17 +150,17 @@
   </header>
 
   <nav class="dropdown" id="dropdown" aria-hidden="true">
-    <a href="https://example.com/store" target="_blank" rel="noopener" data-gated="true">
+    <a href="#" target="_blank" rel="noopener" data-gated="true" data-link-key="store">
       <span class="ico">🛍️</span><span>Store<small>School clothes store</small></span>
     </a>
-    <a href="https://example.com/gradelink" target="_blank" rel="noopener" data-gated="true">
+    <a href="#" target="_blank" rel="noopener" data-gated="true" data-link-key="gradelink">
       <span class="ico">📊</span><span>GradeLink<small>Open your GradeLink account</small></span>
     </a>
-    <a href="https://example.com/utf" target="_blank" rel="noopener" data-gated="true">
+    <a href="#" target="_blank" rel="noopener" data-gated="true" data-link-key="utf">
       <span class="ico">🎓</span><span>UTF<small>University of Toccoa Falls</small></span>
     </a>
     <a href="/schedule.html" data-gated="true">
-      <span class="ico">🗓️</span><span>Schedule<small>Week, grades & assignments</small></span>
+      <span class="ico">🗓️</span><span>Schedule<small>Week, grades &amp; assignments</small></span>
     </a>
     <a href="/mail.html" data-gated="true">
       <span class="ico">✉️</span><span>Mail<small>Choose your inbox</small></span>
@@ -172,77 +172,97 @@
     <p>Your links, schedule, grades, and assignments — organized the Tandem way.</p>
 
     <div class="auth-actions" id="authActions">
-  <a class="btn btn-primary" href="/login.html">Log in</a>
-  <a class="btn btn-ghost" href="/signup.html">Sign up</a>
-</div>
-<div class="welcome-msg" id="welcomeMsg" style="display:none"></div>
+      <a class="btn btn-primary" href="/login.html">Log in</a>
+      <a class="btn btn-ghost" href="/signup.html">Sign up</a>
+    </div>
+    <div class="welcome-msg" id="welcomeMsg" style="display:none"></div>
   </main>
 
-<script type="module">
-  import { isLoggedIn } from './auth.js';
-  import { supabase } from './supabase.js';
+  <script type="module">
+    import { isLoggedIn } from './auth.js';
+    import { supabase } from './supabase.js';
+    import { getUserLinks, isSafeUrl } from './links.js';
 
-  const LOGIN_URL = '/login.html';
+    const LOGIN_URL = '/login.html';
 
-  const menuBtn = document.getElementById('menuBtn');
-  const dropdown = document.getElementById('dropdown');
-  const backdrop = document.getElementById('backdrop');
-  const avatar = document.getElementById('avatar');
-  const authActions = document.getElementById('authActions');
-  const welcomeMsg = document.getElementById('welcomeMsg');
+    const menuBtn = document.getElementById('menuBtn');
+    const dropdown = document.getElementById('dropdown');
+    const backdrop = document.getElementById('backdrop');
+    const avatar = document.getElementById('avatar');
+    const authActions = document.getElementById('authActions');
+    const welcomeMsg = document.getElementById('welcomeMsg');
 
-  function setOpen(open) {
-    menuBtn.classList.toggle('open', open);
-    dropdown.classList.toggle('open', open);
-    backdrop.classList.toggle('show', open);
-    menuBtn.setAttribute('aria-expanded', String(open));
-    dropdown.setAttribute('aria-hidden', String(!open));
-  }
+    function setOpen(open) {
+      menuBtn.classList.toggle('open', open);
+      dropdown.classList.toggle('open', open);
+      backdrop.classList.toggle('show', open);
+      menuBtn.setAttribute('aria-expanded', String(open));
+      dropdown.setAttribute('aria-hidden', String(!open));
+    }
 
-  menuBtn.addEventListener('click', () => setOpen(!dropdown.classList.contains('open')));
-  backdrop.addEventListener('click', () => setOpen(false));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+    menuBtn.addEventListener('click', () => setOpen(!dropdown.classList.contains('open')));
+    backdrop.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
 
-  // Auth gate on menu buttons
-  document.querySelectorAll('.dropdown a[data-gated="true"]').forEach((link) => {
-    link.addEventListener('click', async (e) => {
-      if (!(await isLoggedIn())) {
-        e.preventDefault();
-        window.location.href = LOGIN_URL;
+    // --- Auth gate + link hydration on menu items ---
+    (async () => {
+      const loggedIn = await isLoggedIn();
+      const userLinks = loggedIn ? await getUserLinks() : {};
+      const items = document.querySelectorAll('.dropdown a[data-gated="true"]');
+
+      items.forEach((link) => {
+        const key = link.dataset.linkKey;
+
+        if (key) {
+          const url = userLinks[key];
+          if (url && isSafeUrl(url)) {
+            link.href = url;
+            link.target = '_blank';
+            link.rel = 'noopener';
+          } else {
+            link.style.display = 'none';
+          }
+        }
+
+        link.addEventListener('click', (e) => {
+          if (!loggedIn) {
+            e.preventDefault();
+            window.location.href = LOGIN_URL;
+          }
+        });
+      });
+    })();
+
+    // --- Swap hero buttons for welcome message when signed in ---
+    async function applyAuthUI() {
+      if (!authActions || !welcomeMsg) return;
+
+      const loggedIn = await isLoggedIn();
+      if (!loggedIn) {
+        authActions.style.display = 'flex';
+        welcomeMsg.style.display = 'none';
+        return;
       }
-    });
-  });
 
-  // --- Swap hero buttons for welcome message when signed in ---
-  async function applyAuthUI() {
-    if (!authActions || !welcomeMsg) return; // safety
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        authActions.style.display = 'flex';
+        welcomeMsg.style.display = 'none';
+        return;
+      }
 
-    const loggedIn = await isLoggedIn();
-    if (!loggedIn) {
-      authActions.style.display = 'flex';
-      welcomeMsg.style.display = 'none';
-      return;
+      const { data: profile } = await supabase
+        .from('profiles').select('display_name,username').eq('id', user.id).single();
+
+      const name = profile?.username || profile?.display_name || 'friend';
+      authActions.style.display = 'none';
+      welcomeMsg.style.display = 'block';
+      welcomeMsg.textContent = `Welcome ${name}!`;
+      if (avatar) avatar.textContent = (name[0] || 'T').toUpperCase();
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      authActions.style.display = 'flex';
-      welcomeMsg.style.display = 'none';
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles').select('display_name,username').eq('id', user.id).single();
-
-    const name = profile?.username || profile?.display_name || 'friend';
-    authActions.style.display = 'none';
-    welcomeMsg.style.display = 'block';
-    welcomeMsg.textContent = `Welcome ${name}!`;
-    if (avatar) avatar.textContent = (name[0] || 'T').toUpperCase();
-  }
-
-  applyAuthUI();
-  supabase.auth.onAuthStateChange(() => { applyAuthUI(); });
-</script>
+    applyAuthUI();
+    supabase.auth.onAuthStateChange(() => { applyAuthUI(); });
+  </script>
 </body>
 </html>
