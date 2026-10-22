@@ -40,3 +40,20 @@ export function currentWeekRange(tz = "America/New_York") {
   const fmt = (dt) => dt.toISOString().slice(0, 10);
   return { monday: fmt(monday), sunday: fmt(sunday) };
 }
+/** Returns an array of week numbers [1..8] for the current quarter. */
+export function weeksOfQuarter() {
+  return Array.from({ length: 8 }, (_, i) => i + 1);
+}
+
+/** Given a week number 1-8 and the quarter, return Mon/Sun ISO date strings. */
+export function weekRange(weekNum, quarterNum, schoolStart = SCHOOL_YEAR_START) {
+  const start = new Date(schoolStart + "T00:00:00Z");
+  // Week 1 of Q1 = week 0 offset; each quarter is 8 weeks
+  const weeksOffset = (quarterNum - 1) * 8 + (weekNum - 1);
+  const monday = new Date(start);
+  monday.setUTCDate(start.getUTCDate() + weeksOffset * 7);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
+  const fmt = (dt) => dt.toISOString().slice(0, 10);
+  return { monday: fmt(monday), sunday: fmt(sunday) };
+}

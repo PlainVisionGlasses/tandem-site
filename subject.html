@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subject · Tandem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/nav.css" />
+  <style>
+    :root{
+      --aqua-50:#e6fbfb;--aqua-100:#c2f5f5;--aqua-300:#6fe3e3;--aqua-500:#1fc8c8;--aqua-600:#14a8a8;--aqua-700:#0d8a8a;
+      --ink:#0e2a2a;--ink-soft:#4a6a6a;--danger:#c0392b;
+      --shadow-md:0 8px 28px rgba(14,42,42,.10);--shadow-lg:0 18px 50px rgba(14,42,42,.16);
+      --ease:cubic-bezier(.22,1,.36,1);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);min-height:100vh;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, var(--aqua-100), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, #e9fffb, transparent 55%),
+        linear-gradient(180deg,#f7fffe 0%,#fff 55%,#f4fdfd 100%);
+      -webkit-font-smoothing:antialiased;padding:0 0 60px}
+
+    .layout{max-width:1200px;margin:0 auto;padding:26px 22px;display:grid;grid-template-columns:220px 1fr;gap:22px}
+    @media (max-width:860px){.layout{grid-template-columns:1fr}}
+
+    /* Week scroller (left wall) */
+    .weeks{display:flex;flex-direction:column;gap:8px}
+    .weeks h3{font-size:.74rem;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+    .week-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;
+      padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.7);
+      border:1px solid rgba(31,200,200,.2);font:inherit;font-weight:600;font-size:.88rem;
+      color:var(--ink);cursor:pointer;text-decoration:none;
+      transition:background .2s var(--ease),border-color .2s var(--ease)}
+    .week-btn:hover{background:#fff;border-color:var(--aqua-500)}
+    .week-btn.active{background:linear-gradient(135deg,var(--aqua-500),var(--aqua-700));color:#fff;border-color:transparent;box-shadow:0 8px 20px rgba(20,168,168,.3)}
+    .week-btn small{opacity:.7;font-weight:500;font-size:.72rem}
+
+    /* Main area */
+    .main{display:flex;flex-direction:column;gap:22px;min-width:0}
+
+    .header{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;
+      background:rgba(255,255,255,.85);border:1px solid rgba(31,200,200,.2);
+      border-radius:20px;box-shadow:var(--shadow-md);padding:22px 24px}
+    .header .left h1{font-size:1.8rem;font-weight:800;letter-spacing:-.02em}
+    .header .left .grade{margin-top:6px;color:var(--aqua-700);font-weight:800;font-size:.95rem}
+    .header .right{text-align:right}
+    .header .right .label{font-size:.72rem;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em}
+    .header .right .val{font-size:1rem;font-weight:700;margin-top:2px}
+
+    .notes{background:rgba(255,255,255,.85);border:1px solid rgba(31,200,200,.2);
+      border-radius:20px;box-shadow:var(--shadow-md);padding:20px 24px}
+    .notes h2{font-size:.78rem;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+    .notes p{color:var(--ink);font-size:.95rem;line-height:1.6}
+    .notes p.muted{color:var(--ink-soft);font-style:italic}
+
+    .assignments{background:rgba(255,255,255,.85);border:1px solid rgba(31,200,200,.2);
+      border-radius:20px;box-shadow:var(--shadow-md);padding:22px 24px}
+    .assignments h2{font-size:1rem;font-weight:800;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+    .assignments h2 .week-pill{font-size:.78rem;color:var(--aqua-700);font-weight:700;background:var(--aqua-50);padding:4px 10px;border-radius:999px}
+
+    .assignment{display:flex;align-items:center;gap:14px;padding:14px 16px;
+      border:1px solid rgba(31,200,200,.2);border-radius:14px;background:#fff;
+      margin-bottom:10px;transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+    .assignment:hover{border-color:var(--aqua-500);box-shadow:var(--shadow-md)}
+    .assignment .check{width:22px;height:22px;border-radius:6px;border:2px solid rgba(31,200,200,.35);
+      display:grid;place-items:center;cursor:pointer;flex-shrink:0;
+      transition:background .2s var(--ease),border-color .2s var(--ease)}
+    .assignment .check.done{background:linear-gradient(135deg,var(--aqua-500),var(--aqua-700));border-color:transparent}
+    .assignment .check.done::after{content:"✓";color:#fff;font-weight:900;font-size:.82rem}
+    .assignment .info{flex:1;min-width:0}
+    .assignment .title{font-weight:700;font-size:.95rem}
+    .assignment .title.done{text-decoration:line-through;color:var(--ink-soft)}
+    .assignment .due{font-size:.78rem;color:var(--ink-soft);margin-top:2px}
+    .assignment .due.late{color:var(--danger);font-weight:700}
+    .assignment .actions-inline{display:flex;gap:8px;flex-shrink:0}
+    .assignment .btn-tiny{padding:7px 12px;border-radius:999px;font:inherit;font-weight:700;font-size:.78rem;
+      border:1.5px solid rgba(31,200,200,.4);background:#fff;color:var(--aqua-700);cursor:pointer;
+      text-decoration:none;transition:background .2s var(--ease),border-color .2s var(--ease)}
+    .assignment .btn-tiny:hover{background:#f5fffe;border-color:var(--aqua-500)}
+    .assignment .btn-tiny.del{color:#c0392b;border-color:rgba(192,57,43,.25)}
+    .assignment .btn-tiny.del:hover{background:#fdecec}
+
+    .add-row{display:flex;gap:10px;margin-top:12px}
+    .add-row input{flex:1;padding:11px 14px;border-radius:12px;border:1.5px solid rgba(31,200,200,.25);
+      background:#fff;font:inherit;font-size:.92rem;color:var(--ink);transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+    .add-row input:focus{outline:none;border-color:var(--aqua-500);box-shadow:0 0 0 4px rgba(31,200,200,.14)}
+    .add-row input[type="datetime-local"]{flex:0 0 220px}
+    .add-row button{padding:11px 20px;border:none;border-radius:999px;background:linear-gradient(135deg,var(--aqua-500),var(--aqua-700));
+      color:#fff;font:inherit;font-weight:700;font-size:.9rem;cursor:pointer;
+      box-shadow:0 8px 20px rgba(20,168,168,.3);transition:transform .2s var(--ease)}
+    .add-row button:hover{transform:translateY(-2px)}
+
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+    .toolbar a, .toolbar button{padding:10px 18px;border-radius:999px;font:inherit;font-weight:700;font-size:.88rem;
+      text-decoration:none;cursor:pointer;border:none;
+      transition:transform .2s var(--ease),box-shadow .2s var(--ease)}
+    .toolbar .primary{background:linear-gradient(135deg,var(--aqua-500),var(--aqua-700));color:#fff;box-shadow:0 8px 20px rgba(20,168,168,.3)}
+    .toolbar .primary:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(20,168,168,.4)}
+    .toolbar .ghost{background:#fff;color:var(--aqua-700);border:1.5px solid rgba(31,200,200,.4)}
+    .toolbar .ghost:hover{background:#f5fffe}
+
+    .msg{margin-top:10px;font-size:.85rem;min-height:1.1em}
+    .msg.err{color:var(--danger)}
+    .msg.ok{color:var(--aqua-700)}
+
+    .empty-note{color:var(--ink-soft);font-size:.9rem;padding:10px 0}
+
+    .back{display:inline-block;color:var(--aqua-700);text-decoration:none;font-weight:600;font-size:.9rem;margin-bottom:8px}
+    .back:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div id="navHost"></div>
+
+  <div class="layout">
+    <!-- Week scroller -->
+    <aside class="weeks" id="weeksCol">
+      <h3>Weeks · Q<span id="qLabel">1</span></h3>
+      <div id="weeksList"></div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <div>
+        <a href="/schedule.html" class="back">← Back to schedule</a>
+        <div class="header">
+          <div class="left">
+            <h1 id="subjName">Loading…</h1>
+            <div class="grade" id="subjGrade">—</div>
+          </div>
+          <div class="right">
+            <div class="label">Teacher</div>
+            <div class="val" id="subjTeacher">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notes">
+        <h2>Teacher notes</h2>
+        <p id="notesText" class="muted">No teacher notes.</p>
+      </div>
+
+      <div class="assignments">
+        <h2>
+          Assignments
+          <span class="week-pill" id="weekPill">Week 1</span>
+        </h2>
+
+        <div id="assignmentsList"></div>
+
+        <div class="add-row">
+          <input id="newTitle" placeholder="New assignment title (e.g. Quiz 3)" />
+          <input id="newDue" type="datetime-local" />
+          <button id="addBtn">Add</button>
+        </div>
+        <div class="msg" id="msg"></div>
+
+        <div class="toolbar">
+          <a class="primary" id="uploadAllBtn" href="#" target="_blank" rel="noopener" style="display:none">Open upload destination</a>
+          <a class="ghost" id="studyBtn" href="#" target="_blank" rel="noopener" style="display:none">Study platform</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from "./auth.js";
+    import { supabase } from "./supabase.js";
+    import { mountNav } from "./nav.js";
+    import { getUserLinks, isSafeUrl } from "./links.js";
+    import { currentQuarter, currentWeekOfQuarter, weeksOfQuarter, weekRange } from "./dates.js";
+
+    const session = await requireAuth();
+    if (!session) throw new Error("not signed in");
+    await mountNav();
+
+    const params = new URLSearchParams(location.search);
+    const subjectId = params.get("id");
+    if (!subjectId) {
+      document.getElementById("subjName").textContent = "No subject specified";
+      throw new Error("Missing ?id=");
+    }
+
+    // ---- Load subject
+    const { data: subject, error: subjErr } = await supabase
+      .from("subjects").select("*").eq("id", subjectId).eq("user_id", session.user.id).single();
+
+    if (subjErr || !subject) {
+      document.getElementById("subjName").textContent = "Subject not found";
+      throw new Error("Subject not found");
+    }
+
+    document.title = `${subject.name} · Tandem`;
+    document.getElementById("subjName").textContent = subject.name;
+    document.getElementById("subjTeacher").textContent = subject.teacher || "—";
+    document.getElementById("subjGrade").textContent = subject.grade ? `Grade: ${subject.grade}` : "Grade: —";
+    const notesEl = document.getElementById("notesText");
+    if (subject.notes && subject.notes.trim()) {
+      notesEl.textContent = subject.notes;
+      notesEl.classList.remove("muted");
+    } else {
+      notesEl.textContent = "No teacher notes.";
+      notesEl.classList.add("muted");
+    }
+
+    // ---- Current quarter / week + scroller
+    const q = currentQuarter();
+    const currentWeek = currentWeekOfQuarter();
+    document.getElementById("qLabel").textContent = q;
+
+    let selectedWeek = currentWeek;
+    const weeksList = document.getElementById("weeksList");
+
+    function renderWeekButtons() {
+      weeksList.innerHTML = "";
+      weeksOfQuarter().forEach((w) => {
+        const range = weekRange(w, q);
+        const btn = document.createElement("button");
+        btn.className = "week-btn" + (w === selectedWeek ? " active" : "");
+        btn.innerHTML = `<span>Week ${w}</span><small>${fmtShort(range.monday)}–${fmtShort(range.sunday)}</small>`;
+        btn.addEventListener("click", () => {
+          selectedWeek = w;
+          renderWeekButtons();
+          loadAssignments();
+        });
+        weeksList.appendChild(btn);
+      });
+      document.getElementById("weekPill").textContent = `Week ${selectedWeek}`;
+    }
+
+    function fmtShort(iso) {
+      const d = new Date(iso + "T12:00:00");
+      return d.toLocaleDateString(undefined, { month: "numeric", day: "numeric" });
+    }
+
+    // ---- Load / render assignments for selected week
+    let userLinks = {};
+    async function loadAssignments() {
+      userLinks = await getUserLinks();
+      const range = weekRange(selectedWeek, q);
+      const start = new Date(range.monday + "T00:00:00").toISOString();
+      const end = new Date(range.sunday + "T23:59:59").toISOString();
+
+      const { data, error } = await supabase
+        .from("assignments").select("*")
+        .eq("user_id", session.user.id)
+        .eq("subject_id", subject.id)
+        .or(`due_at.gte.${start},due_at_override.gte.${start}`)
+        .or(`due_at.lte.${end},due_at_override.lte.${end}`)
+        .order("due_at", { ascending: true });
+
+      const list = document.getElementById("assignmentsList");
+      list.innerHTML = "";
+
+      if (error) {
+        list.innerHTML = `<div class="msg err">Could not load assignments: ${error.message}</div>`;
+        return;
+      }
+      if (!data || data.length === 0) {
+        list.innerHTML = `<div class="empty-note">No assignments for Week ${selectedWeek}.</div>`;
+        return;
+      }
+
+      data.forEach((a) => {
+        const due = a.due_at_override || a.due_at;
+        const dueDate = due ? new Date(due) : null;
+        const isLate = dueDate && !a.completed && dueDate < new Date();
+        const dueText = dueDate
+          ? dueDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }) +
+            " · " + dueDate.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+          : "No due date";
+
+        const el = document.createElement("div");
+        el.className = "assignment";
+        el.innerHTML = `
+          <div class="check ${a.completed ? "done" : ""}" data-id="${a.id}"></div>
+          <div class="info">
+            <div class="title ${a.completed ? "done" : ""}">${escapeHtml(a.title)}</div>
+            <div class="due ${isLate ? "late" : ""}">${dueText}${isLate ? " · LATE" : ""}</div>
+          </div>
+          <div class="actions-inline">
+            <a class="btn-tiny" href="#" target="_blank" rel="noopener" data-upload="${a.id}">Upload</a>
+            <button class="btn-tiny del" data-del="${a.id}">Delete</button>
+          </div>
+        `;
+
+        // toggle completed
+        el.querySelector(".check").addEventListener("click", async () => {
+          const nowDone = !a.completed;
+          const { error: upErr } = await supabase
+            .from("assignments")
+            .update({ completed: nowDone, completed_at: nowDone ? new Date().toISOString() : null })
+            .eq("id", a.id);
+          if (upErr) { showMsg(upErr.message, true); return; }
+          loadAssignments();
+        });
+
+        // delete
+        el.querySelector("[data-del]").addEventListener("click", async () => {
+          if (!confirm("Delete this assignment?")) return;
+          const { error: delErr } = await supabase.from("assignments").delete().eq("id", a.id);
+          if (delErr) { showMsg(delErr.message, true); return; }
+          loadAssignments();
+        });
+
+        // upload link
+        const uploadEl = el.querySelector("[data-upload]");
+        const uploadKey = a.upload_key || `upload_${subject.category || "other"}`;
+        const uploadUrl = userLinks[uploadKey];
+        if (uploadUrl && isSafeUrl(uploadUrl)) {
+          uploadEl.href = uploadUrl;
+        } else {
+          uploadEl.style.display = "none"; // hidden until user configures an upload link
+        }
+
+        list.appendChild(el);
+      });
+    }
+
+    function showMsg(text, isError = false) {
+      const m = document.getElementById("msg");
+      m.textContent = text;
+      m.className = "msg " + (isError ? "err" : "ok");
+      setTimeout(() => { m.textContent = ""; m.className = "msg"; }, 2500);
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // ---- Add assignment
+    document.getElementById("addBtn").addEventListener("click", async () => {
+      const title = document.getElementById("newTitle").value.trim();
+      const dueLocal = document.getElementById("newDue").value; // "YYYY-MM-DDTHH:mm"
+      if (!title) { showMsg("Title is required", true); return; }
+
+      const dueIso = dueLocal ? new Date(dueLocal).toISOString() : null;
+
+      const { error } = await supabase.from("assignments").insert({
+        user_id: session.user.id,
+        subject_id: subject.id,
+        title,
+        due_at: dueIso,
+      });
+      if (error) { showMsg(error.message, true); return; }
+      document.getElementById("newTitle").value = "";
+      document.getElementById("newDue").value = "";
+      showMsg("Added ✓");
+      loadAssignments();
+    });
+
+    // ---- Study platform / upload button (subject-level)
+    function setLink(el, url, labelWhenMissing) {
+      if (url && isSafeUrl(url)) {
+        el.href = url;
+        el.style.display = "";
+      } else {
+        el.style.display = "none";
+      }
+    }
+
+    // initial load
+    renderWeekButtons();
+    await loadAssignments();
+
+    const studyKey = subject.study_link_key || `study_${subject.category || "other"}`;
+    const studyUrl = userLinks[studyKey];
+
+    // Configure toolbar
+    setLink(document.getElementById("studyBtn"), studyUrl);
+    const uploadAll = document.getElementById("uploadAllBtn");
+    const subjectUploadUrl = userLinks[`upload_${subject.category || "other"}`];
+    if (subjectUploadUrl && isSafeUrl(subjectUploadUrl)) {
+      uploadAll.href = subjectUploadUrl;
+      uploadAll.style.display = "";
+    }
+  </script>
+</body>
+</html>
