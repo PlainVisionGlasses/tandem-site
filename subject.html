@@ -204,6 +204,18 @@
       notesEl.classList.add("muted");
     }
 
+    // ---- Helpers
+    function slugify(s) {
+      return String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+    }
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    const subjectSlug = slugify(subject.name);
+    const studyKey = subject.study_link_key || `study_${subjectSlug}`;
+    const subjectUploadKey = `upload_${subjectSlug}`;
+
     // ---- Current quarter / week + scroller
     const q = currentQuarter();
     const currentWeek = currentWeekOfQuarter();
@@ -211,6 +223,11 @@
 
     let selectedWeek = currentWeek;
     const weeksList = document.getElementById("weeksList");
+
+    function fmtShort(iso) {
+      const d = new Date(iso + "T12:00:00");
+      return d.toLocaleDateString(undefined, { month: "numeric", day: "numeric" });
+    }
 
     function renderWeekButtons() {
       weeksList.innerHTML = "";
@@ -227,11 +244,6 @@
         weeksList.appendChild(btn);
       });
       document.getElementById("weekPill").textContent = `Week ${selectedWeek}`;
-    }
-
-    function fmtShort(iso) {
-      const d = new Date(iso + "T12:00:00");
-      return d.toLocaleDateString(undefined, { month: "numeric", day: "numeric" });
     }
 
     // ---- Load / render assignments for selected week
@@ -304,9 +316,9 @@
           loadAssignments();
         });
 
-        // upload link
+        // upload link — keyed by subject name (slug) with optional per-assignment override
         const uploadEl = el.querySelector("[data-upload]");
-        const uploadKey = a.upload_key || `upload_${subject.category || "other"}`;
+        const uploadKey = a.upload_key || subjectUploadKey;
         const uploadUrl = userLinks[uploadKey];
         if (uploadUrl && isSafeUrl(uploadUrl)) {
           uploadEl.href = uploadUrl;
@@ -323,10 +335,6 @@
       m.textContent = text;
       m.className = "msg " + (isError ? "err" : "ok");
       setTimeout(() => { m.textContent = ""; m.className = "msg"; }, 2500);
-    }
-
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     }
 
     // ---- Add assignment
@@ -350,8 +358,8 @@
       loadAssignments();
     });
 
-    // ---- Study platform / upload button (subject-level)
-    function setLink(el, url, labelWhenMissing) {
+    // ---- Study / upload toolbar (subject-level)
+    function setLink(el, url) {
       if (url && isSafeUrl(url)) {
         el.href = url;
         el.style.display = "";
@@ -360,21 +368,12 @@
       }
     }
 
-    // initial load
+    // Initial render
     renderWeekButtons();
     await loadAssignments();
 
-    const studyKey = subject.study_link_key || `study_${subject.category || "other"}`;
-    const studyUrl = userLinks[studyKey];
-
-    // Configure toolbar
-    setLink(document.getElementById("studyBtn"), studyUrl);
-    const uploadAll = document.getElementById("uploadAllBtn");
-    const subjectUploadUrl = userLinks[`upload_${subject.category || "other"}`];
-    if (subjectUploadUrl && isSafeUrl(subjectUploadUrl)) {
-      uploadAll.href = subjectUploadUrl;
-      uploadAll.style.display = "";
-    }
+    setLink(document.getElementById("studyBtn"), userLinks[studyKey]);
+    setLink(document.getElementById("uploadAllBtn"), userLinks[subjectUploadKey]);
   </script>
 </body>
 </html>

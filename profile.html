@@ -8,7 +8,7 @@
   <style>
     :root{
       --aqua-50:#e6fbfb;--aqua-100:#c2f5f5;--aqua-300:#6fe3e3;--aqua-500:#1fc8c8;--aqua-600:#14a8a8;--aqua-700:#0d8a8a;
-      --ink:#0e2a2a;--ink-soft:#4a6a6a;--white:#fff;
+      --ink:#0e2a2a;--ink-soft:#4a6a6a;--white:#fff;--danger:#c0392b;
       --shadow-md:0 8px 28px rgba(14,42,42,.10);--shadow-lg:0 18px 50px rgba(14,42,42,.16);
       --ease:cubic-bezier(.22,1,.36,1);
     }
@@ -47,6 +47,19 @@
     .msg{margin-top:10px;font-size:.86rem;min-height:1.1em}
     .msg.ok{color:var(--aqua-700)}
     .msg.err{color:#c0392b}
+
+    /* category picker */
+    .cat-picker{display:flex;gap:8px;align-items:center}
+    .cat-picker select{flex:1}
+    .cat-plus{width:38px;height:38px;border-radius:10px;border:1.5px solid rgba(31,200,200,.4);background:#fff;color:var(--aqua-700);font:inherit;font-weight:800;font-size:1.1rem;cursor:pointer;display:grid;place-items:center;transition:background .2s}
+    .cat-plus:hover{background:#f5fffe}
+    .cat-list{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+    .cat-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:var(--aqua-50);border:1px solid rgba(31,200,200,.25);border-radius:999px;font-size:.8rem;font-weight:600;color:var(--aqua-700)}
+    .cat-chip button{border:none;background:transparent;color:var(--danger);font-weight:800;cursor:pointer;font-size:.9rem;line-height:1}
+    .cat-chip button:hover{opacity:.7}
+    .new-cat-row{display:flex;gap:8px;margin-top:8px}
+    .new-cat-row input{flex:1;padding:9px 12px;border-radius:10px;border:1.5px solid rgba(31,200,200,.25);background:#fff;font:inherit;font-size:.88rem}
+    .new-cat-row button{padding:0 16px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--aqua-500),var(--aqua-700));color:#fff;font:inherit;font-weight:700;cursor:pointer;font-size:.85rem}
   </style>
 </head>
 <body>
@@ -63,10 +76,11 @@
       <div class="field"><label>Timezone</label><div class="val" id="timezone">—</div></div>
     </div>
 
+    <!-- Edit links -->
     <div class="card">
       <h2><span class="ico">🔗</span>Edit links</h2>
       <p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:16px">
-        These links power the Store, GradeLink, UTF, Mail, study platforms, and upload buttons across Tandem.
+        These links power the Store, GradeLink, UTF, Mail, and the study/upload buttons on your subject pages.
         Paste a URL (e.g. <code>https://…</code> or <code>mailto:teacher@school.edu</code>) — or leave blank to hide the button.
       </p>
       <form id="linksForm">
@@ -78,35 +92,37 @@
       </form>
     </div>
 
+    <!-- Subjects -->
     <div class="card" id="subjects">
       <h2><span class="ico">📚</span>Subjects (Q<span id="qLabel">1</span>)</h2>
       <p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:16px">
-        These appear on your Schedule page as buttons. Each opens a subject page with assignments, notes, and grade.
-        Add one per class you take this quarter.
+        These appear on your Schedule page as buttons. Add one per class you take this quarter.
       </p>
 
       <div id="subjectsList" style="margin-bottom:14px"></div>
 
-      <div class="link-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
-        <div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="link-row">
           <label>Course name</label>
           <input id="newSubName" placeholder="Algebra Two" />
         </div>
-        <div>
+        <div class="link-row">
           <label>Teacher</label>
           <input id="newSubTeacher" placeholder="Mr. Smith" />
         </div>
-        <div>
+        <div class="link-row" style="grid-column:1 / -1">
           <label>Category</label>
-          <select id="newSubCategory">
-            <option value="math">Math</option>
-            <option value="science">Science</option>
-            <option value="english">English</option>
-            <option value="history">History</option>
-            <option value="other">Other</option>
-          </select>
+          <div class="cat-picker">
+            <select id="newSubCategory"></select>
+            <button type="button" class="cat-plus" id="addCatBtn" title="Add new category">+</button>
+          </div>
+          <div class="cat-list" id="catList"></div>
+          <div class="new-cat-row" id="newCatRow" style="display:none">
+            <input id="newCatInput" placeholder="New category name (e.g. Band)" />
+            <button type="button" id="saveCatBtn">Add</button>
+          </div>
         </div>
-        <div>
+        <div class="link-row" style="grid-column:1 / -1">
           <label>Grade (optional)</label>
           <input id="newSubGrade" placeholder="A-" />
         </div>
@@ -129,16 +145,24 @@
   <script type="module">
     import { requireAuth, logout } from "./auth.js";
     import { supabase } from "./supabase.js";
-    import { LINK_GROUPS } from "./links-config.js";
+    import { getUserLinks } from "./links.js";
     import { currentQuarter } from "./dates.js";
 
     const session = await requireAuth();
     if (!session) throw new Error("not logged in");
 
+    const TOP_LINKS = [
+      { key: "store",     label: "Store",                 placeholder: "https://school-store.example.com" },
+      { key: "gradelink", label: "GradeLink",             placeholder: "https://app.gradelink.com/..." },
+      { key: "utf",       label: "UTF",                   placeholder: "https://utf.example.edu" },
+      { key: "mail_college",    label: "Mail · College",     placeholder: "https://mail.google.com/..." },
+      { key: "mail_highschool", label: "Mail · High school", placeholder: "https://outlook.com/..." },
+      { key: "mail_personal",   label: "Mail · Personal",    placeholder: "https://mail.google.com/..." },
+    ];
+
     // ---- Load profile
     const { data: profile } = await supabase
       .from("profiles").select("*").eq("id", session.user.id).single();
-
     if (profile) {
       const name = profile.display_name || "Friend";
       document.getElementById("greeting").textContent = `${name}'s Profile`;
@@ -148,79 +172,99 @@
       document.getElementById("timezone").textContent = profile.timezone || "—";
     }
 
-    // ---- Load existing links
-    const { data: rows } = await supabase
-      .from("links").select("key,url").eq("user_id", session.user.id);
-
-    const urlMap = {};
-    (rows || []).forEach((r) => { urlMap[r.key] = r.url; });
-
-    // ---- Build link form
-    const groupsEl = document.getElementById("linkGroups");
-    LINK_GROUPS.forEach((group) => {
-      const g = document.createElement("div");
-      g.className = "link-group";
-      const h3 = document.createElement("h3");
-      h3.textContent = group.title;
-      g.appendChild(h3);
-
-      group.items.forEach((item) => {
-        const row = document.createElement("div");
-        row.className = "link-row";
-        const label = document.createElement("label");
-        label.setAttribute("for", `link_${item.key}`);
-        label.textContent = item.label;
-        const input = document.createElement("input");
-        input.type = "url";
-        input.id = `link_${item.key}`;
-        input.dataset.key = item.key;
-        input.placeholder = item.placeholder;
-        input.value = urlMap[item.key] || "";
-        row.appendChild(label);
-        row.appendChild(input);
-        g.appendChild(row);
-      });
-      groupsEl.appendChild(g);
-    });
-
-    // ---- Save links
-    const form = document.getElementById("linksForm");
-    const msg = document.getElementById("linksMsg");
-    const saveBtn = document.getElementById("saveLinksBtn");
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      msg.textContent = ""; msg.className = "msg";
-      saveBtn.disabled = true;
-
-      const inputs = Array.from(document.querySelectorAll("#linkGroups input"));
-      const upserts = inputs.map((inp) => ({
-        user_id: session.user.id,
-        key: inp.dataset.key,
-        url: inp.value.trim(),
-        updated_at: new Date().toISOString(),
-      }));
-
-      const { error } = await supabase.from("links").upsert(upserts, { onConflict: "user_id,key" });
-
-      if (error) {
-        msg.textContent = "Could not save: " + error.message;
-        msg.className = "msg err";
-        saveBtn.disabled = false;
-        return;
-      }
-
-      msg.textContent = "Links saved ✓";
-      msg.className = "msg ok";
-      saveBtn.disabled = false;
-      setTimeout(() => { msg.textContent = ""; msg.className = "msg"; }, 2500);
-    });
-
-    // ---- Subjects editor ----
+    // ---- Current quarter, subjects, links, categories
     const qNum = currentQuarter();
     const qKey = "Q" + qNum;
     document.getElementById("qLabel").textContent = qNum;
 
+    const { data: userSubjects } = await supabase
+      .from("subjects").select("*")
+      .eq("user_id", session.user.id).eq("quarter", qKey)
+      .order("sort_order", { ascending: true });
+
+    const { data: userCategories } = await supabase
+      .from("categories").select("*")
+      .eq("user_id", session.user.id)
+      .order("label", { ascending: true });
+
+    const { data: linkRows } = await supabase
+      .from("links").select("key,url").eq("user_id", session.user.id);
+
+    const urlMap = {};
+    (linkRows || []).forEach((r) => { urlMap[r.key] = r.url; });
+
+    // ---------- Category picker ----------
+    const catSelect = document.getElementById("newSubCategory");
+    const catList = document.getElementById("catList");
+    const newCatRow = document.getElementById("newCatRow");
+    const newCatInput = document.getElementById("newCatInput");
+
+    function slugify(s) {
+      return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+    }
+
+    function refreshCategoryUI() {
+      // Dropdown
+      catSelect.innerHTML = "";
+      (userCategories || []).forEach((c) => {
+        const o = document.createElement("option");
+        o.value = c.slug; o.textContent = c.label;
+        catSelect.appendChild(o);
+      });
+      if (!userCategories || userCategories.length === 0) {
+        const o = document.createElement("option");
+        o.value = "other"; o.textContent = "other";
+        catSelect.appendChild(o);
+      }
+
+      // Chip list with delete
+      catList.innerHTML = "";
+      (userCategories || []).forEach((c) => {
+        const chip = document.createElement("span");
+        chip.className = "cat-chip";
+        chip.innerHTML = `${c.label} <button title="Delete category" data-cat="${c.id}">×</button>`;
+        chip.querySelector("button").addEventListener("click", async () => {
+          if (!confirm(`Delete category "${c.label}"? Subjects using it will fall back to "other".`)) return;
+          // fall back subjects to 'other'
+          await supabase.from("subjects")
+            .update({ category: "other" })
+            .eq("user_id", session.user.id).eq("category", c.slug);
+          const { error } = await supabase.from("categories").delete().eq("id", c.id);
+          if (error) { showSubjMsg(error.message, true); return; }
+          const idx = userCategories.findIndex(x => x.id === c.id);
+          if (idx >= 0) userCategories.splice(idx, 1);
+          refreshCategoryUI();
+        });
+        catList.appendChild(chip);
+      });
+    }
+
+    document.getElementById("addCatBtn").addEventListener("click", () => {
+      newCatRow.style.display = newCatRow.style.display === "none" ? "flex" : "none";
+      if (newCatRow.style.display === "flex") newCatInput.focus();
+    });
+
+    document.getElementById("saveCatBtn").addEventListener("click", async () => {
+      const label = newCatInput.value.trim();
+      if (!label) return;
+      const slug = slugify(label);
+      if (!slug) { showSubjMsg("Category name must contain letters or numbers", true); return; }
+      if ((userCategories || []).some(c => c.slug === slug)) { showSubjMsg("Category already exists", true); return; }
+
+      const { data, error } = await supabase.from("categories").insert({
+        user_id: session.user.id, slug, label
+      }).select().single();
+      if (error) { showSubjMsg(error.message, true); return; }
+      userCategories.push(data);
+      newCatInput.value = "";
+      newCatRow.style.display = "none";
+      refreshCategoryUI();
+      catSelect.value = slug;
+    });
+
+    refreshCategoryUI();
+
+    // ---------- Subjects list ----------
     async function refreshSubjects() {
       const { data, error } = await supabase
         .from("subjects").select("*")
@@ -231,22 +275,22 @@
       list.innerHTML = "";
 
       if (error) {
-        list.innerHTML = `<div style="color:#c0392b;font-size:.88rem;padding:8px 0">Could not load subjects: ${error.message}</div>`;
+        list.innerHTML = `<div class="msg err">Could not load subjects: ${error.message}</div>`;
         return;
       }
-
       if (!data || data.length === 0) {
         list.innerHTML = `<div style="color:#4a6a6a;font-size:.88rem;padding:8px 0">No subjects yet for ${qKey}.</div>`;
         return;
       }
 
       data.forEach((s) => {
+        const catLabel = (userCategories || []).find(c => c.slug === s.category)?.label || s.category || "other";
         const row = document.createElement("div");
         row.style.cssText = "display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid rgba(31,200,200,.2);border-radius:12px;margin-bottom:8px";
         row.innerHTML = `
           <div style="flex:1">
-            <div style="font-weight:700">${s.name}</div>
-            <div style="font-size:.8rem;color:#4a6a6a">${s.teacher || "No teacher"} · ${s.grade || "—"}</div>
+            <div style="font-weight:700">${escapeHtml(s.name)}</div>
+            <div style="font-size:.8rem;color:#4a6a6a">${escapeHtml(catLabel)} · ${escapeHtml(s.teacher || "No teacher")} · ${escapeHtml(s.grade || "—")}</div>
           </div>
           <button class="btn btn-ghost" style="padding:6px 12px;font-size:.8rem" data-del="${s.id}">Remove</button>
         `;
@@ -255,26 +299,35 @@
 
       list.querySelectorAll("[data-del]").forEach((btn) => {
         btn.addEventListener("click", async () => {
+          if (!confirm("Remove this subject? Its assignments will be deleted too.")) return;
           await supabase.from("subjects").delete().eq("id", btn.dataset.del);
+          // refresh userSubjects for links section
+          userSubjects.length = 0;
+          const { data: updated } = await supabase
+            .from("subjects").select("*")
+            .eq("user_id", session.user.id).eq("quarter", qKey)
+            .order("sort_order", { ascending: true });
+          userSubjects.push(...(updated || []));
           refreshSubjects();
+          buildLinksForm();
         });
       });
     }
 
-    document.getElementById("addSubjectBtn").addEventListener("click", async () => {
-      const sMsg = document.getElementById("subjectsMsg");
-      sMsg.textContent = ""; sMsg.className = "msg";
+    function showSubjMsg(text, isError = false) {
+      const m = document.getElementById("subjectsMsg");
+      m.textContent = text;
+      m.className = "msg " + (isError ? "err" : "ok");
+      setTimeout(() => { m.textContent = ""; m.className = "msg"; }, 2500);
+    }
 
+    document.getElementById("addSubjectBtn").addEventListener("click", async () => {
       const name = document.getElementById("newSubName").value.trim();
       const teacher = document.getElementById("newSubTeacher").value.trim();
-      const category = document.getElementById("newSubCategory").value;
+      const category = catSelect.value || "other";
       const grade = document.getElementById("newSubGrade").value.trim();
 
-      if (!name) {
-        sMsg.textContent = "Course name is required.";
-        sMsg.className = "msg err";
-        return;
-      }
+      if (!name) { showSubjMsg("Course name is required.", true); return; }
 
       const { error } = await supabase.from("subjects").insert({
         user_id: session.user.id,
@@ -282,23 +335,118 @@
         name, teacher, category, grade,
         sort_order: Math.floor(Date.now() / 1000) % 100000,
       });
+      if (error) { showSubjMsg(error.message, true); return; }
 
-      if (error) {
-        sMsg.textContent = "Could not add: " + error.message;
-        sMsg.className = "msg err";
-        return;
-      }
-
-      sMsg.textContent = "Subject added ✓";
-      sMsg.className = "msg ok";
       document.getElementById("newSubName").value = "";
       document.getElementById("newSubTeacher").value = "";
       document.getElementById("newSubGrade").value = "";
+      showSubjMsg("Subject added ✓");
+
+      const { data: updated } = await supabase
+        .from("subjects").select("*")
+        .eq("user_id", session.user.id).eq("quarter", qKey)
+        .order("sort_order", { ascending: true });
+      userSubjects.length = 0;
+      userSubjects.push(...(updated || []));
       refreshSubjects();
-      setTimeout(() => { sMsg.textContent = ""; sMsg.className = "msg"; }, 2000);
+      buildLinksForm();
     });
 
-    refreshSubjects();
+    await refreshSubjects();
+
+    // ---------- Dynamic links form ----------
+    function makeLinkInput(key, label, placeholder, currentValue) {
+      const row = document.createElement("div");
+      row.className = "link-row";
+      row.innerHTML = `
+        <label for="link_${key}">${escapeHtml(label)}</label>
+        <input type="url" id="link_${key}" data-key="${key}" placeholder="${escapeHtml(placeholder)}" value="${currentValue ? escapeHtml(currentValue) : ""}" />
+      `;
+      return row;
+    }
+
+    function buildLinksForm() {
+      const groupsEl = document.getElementById("linkGroups");
+      groupsEl.innerHTML = "";
+
+      // Top-level group
+      const topG = document.createElement("div");
+      topG.className = "link-group";
+      const topH = document.createElement("h3");
+      topH.textContent = "Main navigation & mail";
+      topG.appendChild(topH);
+      TOP_LINKS.forEach((l) => {
+        topG.appendChild(makeLinkInput(l.key, l.label, l.placeholder, urlMap[l.key]));
+      });
+      groupsEl.appendChild(topG);
+
+      // Per-subject group — only for subjects that actually exist
+      if (userSubjects && userSubjects.length > 0) {
+        const subjG = document.createElement("div");
+        subjG.className = "link-group";
+        const h = document.createElement("h3");
+        h.textContent = "Per-subject links";
+        subjG.appendChild(h);
+
+        userSubjects.forEach((s) => {
+          const slug = slugify(s.name);
+          const studyKey = `study_${slug}`;
+          const uploadKey = `upload_${slug}`;
+          subjG.appendChild(makeLinkInput(
+            studyKey,
+            `Study platform — ${s.name}`,
+            "e.g. https://yaymath.org or Derek Owens link",
+            urlMap[studyKey]
+          ));
+          subjG.appendChild(makeLinkInput(
+            uploadKey,
+            `Upload destination — ${s.name}`,
+            "e.g. mailto:teacher@school.edu or Dropbox link",
+            urlMap[uploadKey]
+          ));
+        });
+
+        groupsEl.appendChild(subjG);
+      }
+
+      // Save handler
+      const form = document.getElementById("linksForm");
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById("linksMsg");
+        msg.textContent = ""; msg.className = "msg";
+        const saveBtn = document.getElementById("saveLinksBtn");
+        saveBtn.disabled = true;
+
+        const inputs = Array.from(document.querySelectorAll("#linkGroups input"));
+        const upserts = inputs.map((inp) => ({
+          user_id: session.user.id,
+          key: inp.dataset.key,
+          url: inp.value.trim(),
+          updated_at: new Date().toISOString(),
+        }));
+
+        const { error } = await supabase.from("links").upsert(upserts, { onConflict: "user_id,key" });
+        if (error) {
+          msg.textContent = "Could not save: " + error.message;
+          msg.className = "msg err";
+          saveBtn.disabled = false;
+          return;
+        }
+        // update local urlMap so next rebuild shows current values
+        upserts.forEach((u) => { if (u.url) urlMap[u.key] = u.url; else delete urlMap[u.key]; });
+        msg.textContent = "Links saved ✓";
+        msg.className = "msg ok";
+        saveBtn.disabled = false;
+        setTimeout(() => { msg.textContent = ""; msg.className = "msg"; }, 2000);
+      };
+    }
+
+    buildLinksForm();
+
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
 
     document.getElementById("logoutBtn").addEventListener("click", logout);
   </script>
